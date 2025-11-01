@@ -1,151 +1,300 @@
-# 🚀 Huawei Cloud ECS Manager# Huawei Cloud ECS Manager
+# Huawei Cloud ECS Manager# 🚀 Huawei Cloud ECS Manager# Huawei Cloud ECS Manager
 
 
 
-> A modern, Electron-based desktop application for managing Huawei Cloud Elastic Cloud Server (ECS) instances with an intuitive interface.A modern desktop application for managing Huawei Cloud Elastic Cloud Server (ECS) instances. Start, stop, and monitor your cloud servers with an intuitive, visually engaging interface.
+Desktop application to manage Huawei Cloud ECS instances. Start and stop servers with a simple, visual interface.
 
 
 
-![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-blue)![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-blue)
+![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-blue)> A modern, Electron-based desktop application for managing Huawei Cloud Elastic Cloud Server (ECS) instances with an intuitive interface.A modern desktop application for managing Huawei Cloud Elastic Cloud Server (ECS) instances. Start, stop, and monitor your cloud servers with an intuitive, visually engaging interface.
 
-![Electron](https://img.shields.io/badge/electron-28.0.0-brightgreen)![Electron](https://img.shields.io/badge/electron-28.0.0-brightgreen)
+![License](https://img.shields.io/badge/license-MIT-green)
 
-![License](https://img.shields.io/badge/license-MIT-green)![License](https://img.shields.io/badge/license-MIT-green)
 
-![Node](https://img.shields.io/badge/node-%3E%3D16-brightgreen)
 
 ## Features
 
-## ✨ Features
+![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-blue)![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-blue)
 
-### 🔐 Secure Authentication
+- 🌍 View all ECS instances across all regions
 
-### 🔐 Secure Authentication- Secure credential storage using encrypted local storage
+- ⚡ Start/stop servers with one click![Electron](https://img.shields.io/badge/electron-28.0.0-brightgreen)![Electron](https://img.shields.io/badge/electron-28.0.0-brightgreen)
 
-- 🔒 Encrypted local credential storage- Automatic credential validation
+- 🔐 Secure encrypted credential storage
 
-- ✅ Automatic credential validation- One-time setup with persistent login
+- 🌐 Automatic temporary security group creation for remote access![License](https://img.shields.io/badge/license-MIT-green)![License](https://img.shields.io/badge/license-MIT-green)
 
-- 💾 Persistent login (no re-authentication needed)
+- 📊 Real-time server status monitoring
 
-### 🖥️ Server Management
-
-### 🖥️ Server Management- View all ECS instances across all regions in a single dropdown
-
-- 🌍 View all ECS instances across **all regions** in one place- Real-time server status monitoring
-
-- ⚡ Real-time server status monitoring (auto-refresh every 30s)- Intuitive "Ignition Button" control interface with visual feedback
-
-- 🎮 Intuitive "Ignition Button" interface with visual state feedback- Start and stop servers with a single click
-
-- 🔄 Start/stop servers with a single click- Automatic status updates every 30 seconds
-
-- 🌐 Automatic temporary security group creation for remote access
-
-### 📊 Resource Monitoring
-
-### 📊 Resource Monitoring- Real-time account quota display (vCPUs, Memory, Instances)
-
-- 📈 Real-time account quota display (vCPUs, Memory, Instances)- Auto-refresh every 5 minutes
-
-- 🔄 Auto-refresh every 5 minutes- Manual refresh on demand
-
-- 🔃 Manual refresh on demand
-
-### 🎨 Modern UI
-
-### 🎨 Modern UI- Clean, dark-themed interface
-
-- 🌙 Clean, dark-themed interface- Animated controls with visual state indicators
-
-- ✨ Animated controls with visual state indicators- Responsive design
-
-- 📱 Responsive design- Smooth transitions and feedback
-
-- 🎭 Smooth transitions and feedback
+![Node](https://img.shields.io/badge/node-%3E%3D16-brightgreen)
 
 ## Prerequisites
 
-## 📋 Prerequisites
+## Features
 
-- **Node.js** (v16 or higher)
+- **Node.js** v16+ ([Download](https://nodejs.org/))
 
-- **Node.js** v16 or higher ([Download](https://nodejs.org/))- **npm** (v7 or higher)
+- **Huawei Cloud Account** with ECS access## ✨ Features
 
-- **npm** v7 or higher (comes with Node.js)- **Huawei Cloud Account** with ECS access
+- **Access Keys** ([Get them here](https://console.huaweicloud.com))
 
-- **Huawei Cloud Account** with ECS access- **Access Key ID** and **Secret Access Key** from Huawei Cloud
+### 🔐 Secure Authentication
 
-- **Access Key ID** and **Secret Access Key** from Huawei Cloud
+## Quick Start
 
-## Installation
+### 🔐 Secure Authentication- Secure credential storage using encrypted local storage
 
-## 🚀 Quick Start
+```bash
 
-1. **Clone or download this repository**
+# Clone the repository- 🔒 Encrypted local credential storage- Automatic credential validation
 
-### Installation   ```bash
+git clone https://github.com/klatort/ecs-switch.git
 
-   git clone <repository-url>
-
-```bash   cd huawei-cloud-ecs-manager
-
-# Clone the repository   ```
-
-git clone https://github.com/yourusername/ecs-switch.git
-
-cd ecs-switch2. **Install dependencies**
-
-   ```bash
-
-# Install dependencies   npm install
-
-npm install   ```
+cd ecs-switch- ✅ Automatic credential validation- One-time setup with persistent login
 
 
 
-# Run the application## Configuration
+# Install dependencies- 💾 Persistent login (no re-authentication needed)
 
-npm start
+npm install
 
-```### Getting Your Huawei Cloud Credentials
+### 🖥️ Server Management
 
+# Run the application
 
+npm start### 🖥️ Server Management- View all ECS instances across all regions in a single dropdown
 
-### Getting Huawei Cloud Credentials1. Log in to [Huawei Cloud Console](https://console.huaweicloud.com)
+```
 
-2. Click on your username in the top-right corner
-
-1. Log in to [Huawei Cloud Console](https://console.huaweicloud.com)3. Select **My Credentials**
-
-2. Click on your username → **My Credentials**4. Navigate to **Access Keys** tab
-
-3. Navigate to **Access Keys** tab5. Click **Create Access Key**
-
-4. Click **Create Access Key**6. Download and save your **Access Key ID** and **Secret Access Key** securely
-
-5. Download and save your credentials securely
-
-⚠️ **Important**: Keep your secret access key confidential and never share it publicly.
-
-⚠️ **Security Note**: Never share your Secret Access Key publicly or commit it to version control!
+- 🌍 View all ECS instances across **all regions** in one place- Real-time server status monitoring
 
 ## Usage
 
-## 📖 Usage
-
-### Running the Application
+- ⚡ Real-time server status monitoring (auto-refresh every 30s)- Intuitive "Ignition Button" control interface with visual feedback
 
 ### First Launch
 
-**Development mode:**
+- 🎮 Intuitive "Ignition Button" interface with visual state feedback- Start and stop servers with a single click
 
-1. Enter your **Access Key ID** and **Secret Access Key**```bash
+1. Enter your Huawei Cloud **Access Key ID** and **Secret Access Key**
 
-2. Click **Login** to authenticatenpm start
+2. Click **Login**- 🔄 Start/stop servers with a single click- Automatic status updates every 30 seconds
 
-3. Credentials are encrypted and stored locally for future sessions```
+3. Your credentials are encrypted and stored locally
 
+- 🌐 Automatic temporary security group creation for remote access
+
+### Managing Servers
+
+### 📊 Resource Monitoring
+
+1. **Select a server** from the dropdown (shows all regions)
+
+2. **Click the Ignition Button** to start/stop the server### 📊 Resource Monitoring- Real-time account quota display (vCPUs, Memory, Instances)
+
+   - 🔴 Red = Stopped (click to start)
+
+   - 🟢 Green = Running (click to stop)- 📈 Real-time account quota display (vCPUs, Memory, Instances)- Auto-refresh every 5 minutes
+
+   - 🟡 Yellow = Operation in progress
+
+- 🔄 Auto-refresh every 5 minutes- Manual refresh on demand
+
+### Auto-IP Feature
+
+- 🔃 Manual refresh on demand
+
+Toggle "Auto-IP" to automatically:
+
+- Create temporary security group on start### 🎨 Modern UI
+
+- Grant your current IP address SSH/RDP access
+
+- Remove security group when stopping### 🎨 Modern UI- Clean, dark-themed interface
+
+
+
+### Keyboard Shortcuts- 🌙 Clean, dark-themed interface- Animated controls with visual state indicators
+
+
+
+- **F12** - Open DevTools for debugging- ✨ Animated controls with visual state indicators- Responsive design
+
+- **ESC** - Close application
+
+- 📱 Responsive design- Smooth transitions and feedback
+
+## Building for Distribution
+
+- 🎭 Smooth transitions and feedback
+
+```bash
+
+# Build for all platforms## Prerequisites
+
+npm run build
+
+## 📋 Prerequisites
+
+# Build for specific platform
+
+npm run build:win    # Windows- **Node.js** (v16 or higher)
+
+npm run build:mac    # macOS
+
+npm run build:linux  # Linux- **Node.js** v16 or higher ([Download](https://nodejs.org/))- **npm** (v7 or higher)
+
+```
+
+- **npm** v7 or higher (comes with Node.js)- **Huawei Cloud Account** with ECS access
+
+Built applications will be in the `dist/` folder.
+
+- **Huawei Cloud Account** with ECS access- **Access Key ID** and **Secret Access Key** from Huawei Cloud
+
+## Project Structure
+
+- **Access Key ID** and **Secret Access Key** from Huawei Cloud
+
+```
+
+ecs-switch/## Installation
+
+├── src/
+
+│   ├── main/           # Electron main process## 🚀 Quick Start
+
+│   ├── renderer/       # UI components
+
+│   └── shared/         # Shared utilities1. **Clone or download this repository**
+
+├── build/              # Build assets (icons)
+
+└── docs/               # Documentation### Installation   ```bash
+
+```
+
+   git clone <repository-url>
+
+## Configuration
+
+```bash   cd huawei-cloud-ecs-manager
+
+Get your Huawei Cloud credentials:
+
+1. Log in to [Huawei Cloud Console](https://console.huaweicloud.com)# Clone the repository   ```
+
+2. Click your username → **My Credentials**
+
+3. Go to **Access Keys** → **Create Access Key**git clone https://github.com/yourusername/ecs-switch.git
+
+4. Download and save securely
+
+cd ecs-switch2. **Install dependencies**
+
+⚠️ **Never share or commit your Secret Access Key!**
+
+   ```bash
+
+## Troubleshooting
+
+# Install dependencies   npm install
+
+**Invalid credentials error**
+
+- Verify Access Key ID and Secret Access Key are correctnpm install   ```
+
+- Check your Huawei Cloud account has ECS permissions
+
+
+
+**No servers found**
+
+- Ensure you have ECS instances in your account# Run the application## Configuration
+
+- Check servers exist in supported regions
+
+npm start
+
+**Application won't start**
+
+```bash```### Getting Your Huawei Cloud Credentials
+
+# Check Node.js version
+
+node --version  # Should be v16+
+
+
+
+# Reinstall dependencies### Getting Huawei Cloud Credentials1. Log in to [Huawei Cloud Console](https://console.huaweicloud.com)
+
+rm -rf node_modules package-lock.json
+
+npm install2. Click on your username in the top-right corner
+
+```
+
+1. Log in to [Huawei Cloud Console](https://console.huaweicloud.com)3. Select **My Credentials**
+
+## Development
+
+2. Click on your username → **My Credentials**4. Navigate to **Access Keys** tab
+
+```bash
+
+npm start          # Run in development3. Navigate to **Access Keys** tab5. Click **Create Access Key**
+
+npm run dev        # Run with dev flag
+
+```4. Click **Create Access Key**6. Download and save your **Access Key ID** and **Secret Access Key** securely
+
+
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for development guidelines.5. Download and save your credentials securely
+
+
+
+## Supported Regions⚠️ **Important**: Keep your secret access key confidential and never share it publicly.
+
+
+
+Africa, Asia Pacific, China, Europe, Latin America, Middle East, North America (18 regions total)⚠️ **Security Note**: Never share your Secret Access Key publicly or commit it to version control!
+
+
+
+## License## Usage
+
+
+
+[MIT License](LICENSE) - Free for personal and commercial use## 📖 Usage
+
+
+
+## Links### Running the Application
+
+
+
+- [Documentation](docs/STRUCTURE.md)### First Launch
+
+- [GitHub Setup Guide](docs/GITHUB-SETUP.md)
+
+- [Huawei Cloud Docs](https://support.huaweicloud.com/en-us/)**Development mode:**
+
+
+
+## Disclaimer1. Enter your **Access Key ID** and **Secret Access Key**```bash
+
+
+
+This is an unofficial application and is not affiliated with Huawei Cloud.2. Click **Login** to authenticatenpm start
+
+
+
+---3. Credentials are encrypted and stored locally for future sessions```
+
+
+
+Made with ❤️ for Huawei Cloud users
 
 
 ### Managing Serversor
