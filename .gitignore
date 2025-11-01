@@ -1,9 +1,8 @@
 # Dependencies
 node_modules/
 
-# Build outputs
+# Build outputs (packaged apps)
 dist/
-build/
 out/
 
 # Logs
