@@ -552,8 +552,10 @@ function getCurrentButtonState() {
 
 // Perform server operation
 async function performServerOperation(operation) {
+  // Capture server ID and region immediately to prevent issues if user switches servers
   const operatingServerId = currentServer.id;
-  console.log(`[UI] Starting ${operation} operation for server ${operatingServerId}`);
+  const operatingServerRegion = currentServer.region;
+  console.log(`[UI] Starting ${operation} operation for server ${operatingServerId} in region ${operatingServerRegion}`);
   isOperating = true;
   hideError();
 
@@ -587,7 +589,7 @@ async function performServerOperation(operation) {
         console.log(`[UI] Public IP retrieved: ${ipResult.ip}`);
         const sgResult = await window.electronAPI.createTempSecurityGroup({
           serverId: operatingServerId,
-          region: currentServer.region,
+          region: operatingServerRegion,
           userIp: ipResult.ip,
         });
 
@@ -622,7 +624,7 @@ async function performServerOperation(operation) {
         );
         const sgResult = await window.electronAPI.removeTempSecurityGroup({
           serverId: operatingServerId,
-          region: currentServer.region,
+          region: operatingServerRegion,
           sgId: sgInfo.sgId,
           sgName: sgInfo.sgName,
         });
@@ -652,7 +654,7 @@ async function performServerOperation(operation) {
 
     const result = await apiCall({
       serverId: operatingServerId,
-      region: currentServer.region,
+      region: operatingServerRegion,
     });
 
     console.log(`[UI] ${operation} API result:`, result);
