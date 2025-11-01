@@ -1,0 +1,101 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ECS Switch</title>
+  <link rel="stylesheet" href="../styles/main.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Custom title bar -->
+    <div class="custom-titlebar">
+      <button id="closeButton" class="btn-close" title="Close">✕</button>
+    </div>
+    
+    <!-- Main Content -->
+    <div class="main-content">
+      <!-- Header Row: Auto-IP Toggle + Server Selection + Logout -->
+      <div class="header-row">
+        <div class="toggle-container">
+          <input type="checkbox" id="autoIpToggle" class="toggle-checkbox">
+          <label for="autoIpToggle" class="toggle-label" title="Automatically add/remove your IP to security group">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+            </svg>
+          </label>
+        </div>
+        
+        <div class="select-wrapper">
+          <select id="serverSelect" disabled>
+            <option value="">Loading servers...</option>
+          </select>
+        </div>
+        
+        <button id="logoutButton" class="btn-logout" title="Logout">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+            <polyline points="16 17 21 12 16 7"></polyline>
+            <line x1="21" y1="12" x2="9" y2="12"></line>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Power Button -->
+      <button id="ignitionButton" class="power-button" disabled>
+        <div class="power-icon" id="buttonIcon">
+          <svg class="icon-power" width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+            <path d="M12 2v10M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+          </svg>
+          <svg class="icon-hourglass" width="56" height="56" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+            <!-- Top bar -->
+            <rect x="6" y="2" width="12" height="2" rx="1"></rect>
+            <!-- Bottom bar -->
+            <rect x="6" y="20" width="12" height="2" rx="1"></rect>
+            <!-- Hourglass outline -->
+            <path d="M7 4 v3 a5 5 0 0 0 3 4.5 a2 2 0 0 1 1 1.5 a2 2 0 0 1 -1 1.5 a5 5 0 0 0 -3 4.5 v3 h10 v-3 a5 5 0 0 0 -3 -4.5 a2 2 0 0 1 -1 -1.5 a2 2 0 0 1 1 -1.5 a5 5 0 0 0 3 -4.5 v-3 z" fill="none" stroke="currentColor" stroke-width="1.5"></path>
+            <!-- Top sand -->
+            <path d="M9.5 6.5 h5 a3.5 3.5 0 0 1 -2.5 3 a2.5 2.5 0 0 0 -1 1 h0.5 a2.5 2.5 0 0 0 -1 -1 a3.5 3.5 0 0 1 -2.5 -3 z" opacity="0.85"></path>
+            <!-- Bottom sand (same as top, mirrored) -->
+            <path d="M9.5 17.5 h5 a3.5 3.5 0 0 0 -2.5 -3 a2.5 2.5 0 0 1 -1 -1 h0.5 a2.5 2.5 0 0 1 -1 1 a3.5 3.5 0 0 0 -2.5 3 z" opacity="0.85"></path>
+          </svg>
+        </div>
+      </button>
+
+      <!-- Status -->
+      <div class="status-text" id="statusText">No server selected</div>
+      
+      <!-- IT Fact Display (shown during transitions) -->
+      <div class="it-fact" id="itFact"></div>
+      
+      <!-- Elastic IP Display (shown when no fact is displayed) -->
+      <div class="ip-container" id="ipContainer" style="display: none;">
+        <div class="ip-label">Elastic IP:</div>
+        <div class="ip-display">
+          <span class="ip-text" id="ipText">-</span>
+          <button class="btn-copy" id="copyIpButton" title="Copy IP address">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Error Display -->
+      <div id="errorDisplay" class="error-display"></div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay">
+      <div class="loading-spinner"></div>
+      <div class="loading-text">Checking ECS instances...</div>
+    </div>
+  </div>
+
+  <script src="../scripts/main.js"></script>
+</body>
+</html>
+
+

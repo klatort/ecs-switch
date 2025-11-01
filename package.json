@@ -1,0 +1,66 @@
+{
+  "name": "huawei-cloud-ecs-manager",
+  "version": "1.0.2b",
+  "description": "Desktop application to manage Huawei Cloud ECS instances",
+  "main": "src/main/index.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --dev",
+    "build": "electron-builder",
+    "build:win": "electron-builder --win",
+    "build:mac": "electron-builder --mac",
+    "build:linux": "electron-builder --linux",
+    "pack": "electron-packager . \"ECS Switch\" --platform=win32 --arch=x64 --out=dist --overwrite --icon=build/icon.ico --app-copyright=\"ECS Manager\" --win32metadata.CompanyName=\"Huawei Cloud Tools\""
+  },
+  "keywords": [
+    "huawei",
+    "cloud",
+    "ecs",
+    "electron"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^28.0.0",
+    "electron-builder": "^24.13.3",
+    "electron-packager": "^17.1.2"
+  },
+  "dependencies": {
+    "@huaweicloud/huaweicloud-sdk-core": "^3.1.0",
+    "@huaweicloud/huaweicloud-sdk-ecs": "^3.1.0",
+    "@huaweicloud/huaweicloud-sdk-iam": "^3.1.0",
+    "@huaweicloud/huaweicloud-sdk-vpc": "^3.1.173",
+    "electron-store": "^8.1.0",
+    "uuid": "^8.3.2"
+  },
+  "build": {
+    "appId": "com.huawei.ecs-manager",
+    "productName": "ECS Switch",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "src/**/*",
+      "node_modules/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        "portable"
+      ],
+      "icon": "build/icon.ico"
+    },
+    "mac": {
+      "target": "dmg",
+      "icon": "build/icon.icns"
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "icon": "build/icon.png",
+      "category": "Utility"
+    }
+  }
+}

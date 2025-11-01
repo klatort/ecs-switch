@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ECS Switch Icon Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px;
+            background: #f0f0f0;
+        }
+        canvas {
+            border: 2px solid #333;
+            margin: 20px 0;
+            background: white;
+        }
+        button {
+            padding: 12px 24px;
+            font-size: 16px;
+            background: #ed1c24;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #c71820;
+        }
+        .info {
+            margin-top: 20px;
+            text-align: center;
+            max-width: 500px;
+        }
+    </style>
+</head>
+<body>
+    <h1>ECS Switch Icon Generator</h1>
+    <canvas id="iconCanvas" width="512" height="512"></canvas>
+    <button onclick="downloadIcon()">Download as PNG (512x512)</button>
+    <div class="info">
+        <h3>Instructions:</h3>
+        <ol style="text-align: left;">
+            <li>Click "Download as PNG" to save the icon</li>
+            <li>Go to <a href="https://convertio.co/png-ico/" target="_blank">https://convertio.co/png-ico/</a></li>
+            <li>Upload the PNG and convert to ICO format</li>
+            <li>Download the ICO file</li>
+            <li>Rename it to <code>icon.ico</code></li>
+            <li>Place it in the <code>build</code> folder of your project</li>
+            <li>Run <code>npm run build:win</code> again</li>
+        </ol>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('iconCanvas');
+        const ctx = canvas.getContext('2d');
+        const size = 512;
+
+        // Background - dark with subtle gradient
+        const gradient = ctx.createLinearGradient(0, 0, size, size);
+        gradient.addColorStop(0, '#1a1a1a');
+        gradient.addColorStop(1, '#0a0a0a');
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, size, size);
+
+        // Power button circle
+        ctx.strokeStyle = '#ed1c24';
+        ctx.lineWidth = 20;
+        ctx.beginPath();
+        ctx.arc(size / 2, size / 2, 160, 0.7 * Math.PI, 2.3 * Math.PI);
+        ctx.stroke();
+
+        // Power symbol vertical line
+        ctx.lineWidth = 20;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(size / 2, size / 2 - 120);
+        ctx.lineTo(size / 2, size / 2);
+        ctx.stroke();
+
+        // Glow effect
+        ctx.shadowBlur = 40;
+        ctx.shadowColor = '#ed1c24';
+        ctx.strokeStyle = '#ed1c24';
+        ctx.lineWidth = 20;
+        ctx.beginPath();
+        ctx.arc(size / 2, size / 2, 160, 0.7 * Math.PI, 2.3 * Math.PI);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(size / 2, size / 2 - 120);
+        ctx.lineTo(size / 2, size / 2);
+        ctx.stroke();
+
+        function downloadIcon() {
+            const link = document.createElement('a');
+            link.download = 'ecs-switch-icon.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+    </script>
+</body>
+</html>
