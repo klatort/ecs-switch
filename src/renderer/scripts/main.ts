@@ -1,18 +1,38 @@
-let currentServer = null;
-let servers = [];
-let isOperating = false;
-let factInterval = null;
+// Type definitions
+interface Server {
+  id: string;
+  name: string;
+  status: string;
+  region: string;
+  displayName: string;
+  publicIp: string | null;
+}
+
+interface SecurityGroupInfo {
+  sgId: string;
+  sgName: string;
+}
+
+interface OperationState {
+  operation: 'start' | 'stop';
+  startTime: number;
+}
+
+let currentServer: Server | null = null;
+let servers: Server[] = [];
+let isOperating: boolean = false;
+let factInterval: NodeJS.Timeout | null = null;
 // Track security groups per server ID
-const serverSecurityGroups = new Map(); // Map<serverId, {sgId, sgName}>
+const serverSecurityGroups = new Map<string, SecurityGroupInfo>();
 // Track operation states per server ID
-const serverOperations = new Map(); // Map<serverId, {operation: 'start'|'stop', startTime: number}>
+const serverOperations = new Map<string, OperationState>();
 
 // Load persisted security groups from localStorage
-function loadSecurityGroups() {
+function loadSecurityGroups(): void {
   try {
     const saved = localStorage.getItem('serverSecurityGroups');
     if (saved) {
-      const parsed = JSON.parse(saved);
+      const parsed = JSON.parse(saved) as Record<string, SecurityGroupInfo>;
       Object.entries(parsed).forEach(([serverId, sgInfo]) => {
         serverSecurityGroups.set(serverId, sgInfo);
       });
@@ -24,7 +44,7 @@ function loadSecurityGroups() {
 }
 
 // Save security groups to localStorage
-function saveSecurityGroups() {
+function saveSecurityGroups(): void {
   try {
     const obj = Object.fromEntries(serverSecurityGroups);
     localStorage.setItem('serverSecurityGroups', JSON.stringify(obj));
@@ -34,11 +54,11 @@ function saveSecurityGroups() {
 }
 
 // Load persisted operation states from localStorage
-function loadOperationStates() {
+function loadOperationStates(): void {
   try {
     const saved = localStorage.getItem('serverOperations');
     if (saved) {
-      const parsed = JSON.parse(saved);
+      const parsed = JSON.parse(saved) as Record<string, OperationState>;
       const now = Date.now();
       Object.entries(parsed).forEach(([serverId, opState]) => {
         // Only restore if less than 5 minutes old (prevent stale states)
@@ -54,7 +74,7 @@ function loadOperationStates() {
 }
 
 // Save operation states to localStorage
-function saveOperationStates() {
+function saveOperationStates(): void {
   try {
     const obj = Object.fromEntries(serverOperations);
     localStorage.setItem('serverOperations', JSON.stringify(obj));
@@ -169,28 +189,112 @@ const IT_FACTS = [
   "The average person will spend 5 years and 4 months of their lifetime on social media.",
 ];
 
-// DOM Elements
-const serverSelect = document.getElementById("serverSelect");
-const ignitionButton = document.getElementById("ignitionButton");
-const buttonIcon = document.getElementById("buttonIcon");
-const statusText = document.getElementById("statusText");
-const itFact = document.getElementById("itFact");
-const errorDisplay = document.getElementById("errorDisplay");
-const loadingOverlay = document.getElementById("loadingOverlay");
-const logoutButton = document.getElementById("logoutButton");
-const closeButton = document.getElementById("closeButton");
-const ipContainer = document.getElementById("ipContainer");
-const ipText = document.getElementById("ipText");
-const copyIpButton = document.getElementById("copyIpButton");
-const autoIpToggle = document.getElementById("autoIpToggle");
+// DOM Elements - will be initialized when DOM is ready
+let serverSelect: HTMLSelectElement;
+let ignitionButton: HTMLButtonElement;
+let buttonIcon: HTMLElement;
+let statusText: HTMLElement;
+let itFact: HTMLDivElement;
+let errorDisplay: HTMLDivElement;
+let loadingOverlay: HTMLDivElement;
+let logoutButton: HTMLButtonElement;
+let closeButton: HTMLButtonElement;
+let ipContainer: HTMLDivElement;
+let ipText: HTMLElement;
+let copyIpButton: HTMLButtonElement;
+let autoIpToggle: HTMLInputElement;
+
+// Utility Functions (defined before use)
+
+// Show/hide loading overlay
+function showLoading(show: boolean): void {
+  if (loadingOverlay) {
+    if (show) {
+      loadingOverlay.classList.add("show");
+    } else {
+      loadingOverlay.classList.remove("show");
+    }
+  }
+}
+
+// Show error message
+function showError(message: string): void {
+  if (errorDisplay) {
+    errorDisplay.textContent = message;
+    errorDisplay.classList.add("show");
+    setTimeout(() => {
+      hideError();
+    }, 5000);
+  }
+}
+
+// Hide error message
+function hideError(): void {
+  if (errorDisplay) {
+    errorDisplay.classList.remove("show");
+  }
+}
+
+// Reset button to default state
+function resetButton(): void {
+  if (ignitionButton && statusText) {
+    ignitionButton.disabled = true;
+    ignitionButton.classList.remove("state-off", "state-on", "state-working");
+    statusText.textContent = "No server selected";
+    statusText.classList.remove(
+      "status-running",
+      "status-stopped",
+      "status-working"
+    );
+    hideElasticIp();
+  }
+}
+
+// Hide elastic IP display
+function hideElasticIp(): void {
+  if (ipContainer) {
+    ipContainer.style.display = "none";
+  }
+}
+
+// Update elastic IP display
+function updateElasticIpDisplay(ip: string | null): void {
+  if (ipText && ipContainer) {
+    if (ip) {
+      ipText.textContent = ip;
+      ipContainer.style.display = "block";
+    } else {
+      ipText.textContent = "-";
+      ipContainer.style.display = "none";
+    }
+  }
+}
+
+// Show random IT fact
+function showRandomFact(): void {
+  if (itFact) {
+    const randomFact = IT_FACTS[Math.floor(Math.random() * IT_FACTS.length)];
+    itFact.textContent = randomFact;
+    itFact.classList.add("show");
+  }
+}
+
+// Hide IT fact
+function hideFact(): void {
+  if (itFact) {
+    itFact.classList.remove("show");
+  }
+}
 
 // Initialize
-async function init() {
+async function init(): Promise<void> {
+  console.log('[Main Renderer] init() started');
   showLoading(true);
 
   // Load saved auto-IP preference
   const autoIpEnabled = localStorage.getItem("autoIpEnabled") === "true";
   autoIpToggle.checked = autoIpEnabled;
+  console.log('[Main Renderer] Auto-IP enabled:', autoIpEnabled);
 
   // Load persisted security groups
   loadSecurityGroups();
@@ -254,11 +358,6 @@ async function cleanupOrphanedSecurityGroups() {
     }
   }
 }
-
-// Save auto-IP toggle state
-autoIpToggle.addEventListener("change", () => {
-  localStorage.setItem("autoIpEnabled", autoIpToggle.checked);
-});
 
 // Load servers from all regions
 async function loadServers() {
@@ -329,23 +428,65 @@ async function loadServers() {
   }
 }
 
-// Server selection handler
-serverSelect.addEventListener("change", async (e) => {
-  const value = e.target.value;
+// Initialize DOM elements and start application
+console.log('[Main Renderer] Script loaded, waiting for DOM...');
 
-  if (!value) {
-    currentServer = null;
-    isOperating = false;
-    clearInterval(factInterval);
-    hideFact();
-    resetButton();
-    hideElasticIp();
-    return;
-  }
+document.addEventListener('DOMContentLoaded', () => {
+  console.log('[Main Renderer] DOM Content Loaded event fired');
+  
+  serverSelect = document.getElementById("serverSelect") as HTMLSelectElement;
+  ignitionButton = document.getElementById("ignitionButton") as HTMLButtonElement;
+  buttonIcon = document.getElementById("buttonIcon") as HTMLElement;
+  statusText = document.getElementById("statusText") as HTMLElement;
+  itFact = document.getElementById("itFact") as HTMLDivElement;
+  errorDisplay = document.getElementById("errorDisplay") as HTMLDivElement;
+  loadingOverlay = document.getElementById("loadingOverlay") as HTMLDivElement;
+  logoutButton = document.getElementById("logoutButton") as HTMLButtonElement;
+  closeButton = document.getElementById("closeButton") as HTMLButtonElement;
+  ipContainer = document.getElementById("ipContainer") as HTMLDivElement;
+  ipText = document.getElementById("ipText") as HTMLElement;
+  copyIpButton = document.getElementById("copyIpButton") as HTMLButtonElement;
+  autoIpToggle = document.getElementById("autoIpToggle") as HTMLInputElement;
+  
+  console.log('[Main Renderer] DOM elements initialized:', {
+    serverSelect: !!serverSelect,
+    ignitionButton: !!ignitionButton,
+    closeButton: !!closeButton,
+    logoutButton: !!logoutButton
+  });
+  
+  // Set up all event listeners
+  setupEventListeners();
+  
+  // Initialize on load
+  console.log('[Main Renderer] Calling init()...');
+  init();
+});
 
-  try {
-    const serverInfo = JSON.parse(value);
-    const server = servers.find((s) => s.id === serverInfo.id);
+// Set up all event listeners (called after DOM is ready)
+function setupEventListeners(): void {
+  // Save auto-IP toggle state
+  autoIpToggle.addEventListener("change", () => {
+    localStorage.setItem("autoIpEnabled", String(autoIpToggle.checked));
+  });
+  
+  // Server selection handler
+  serverSelect.addEventListener("change", async (e) => {
+    const value = (e.target as HTMLSelectElement).value;
+
+    if (!value) {
+      currentServer = null;
+      isOperating = false;
+      clearInterval(factInterval);
+      hideFact();
+      resetButton();
+      hideElasticIp();
+      return;
+    }
+
+    try {
+      const serverInfo = JSON.parse(value);
+      const server = servers.find((s) => s.id === serverInfo.id);
 
     if (server) {
       currentServer = server;
@@ -414,22 +555,6 @@ copyIpButton.addEventListener("click", async () => {
     showError("Failed to copy IP address.");
   }
 });
-
-// Update Elastic IP display
-function updateElasticIpDisplay(publicIp) {
-  if (publicIp) {
-    ipText.textContent = publicIp;
-    ipContainer.style.display = "block";
-  } else {
-    hideElasticIp();
-  }
-}
-
-// Hide Elastic IP display
-function hideElasticIp() {
-  ipContainer.style.display = "none";
-  ipText.textContent = "-";
-}
 
 // Update server status
 async function updateServerStatus() {
@@ -739,79 +864,10 @@ async function refreshDropdownIndicators() {
   }
 }
 
-// Show random IT fact
-function showRandomFact() {
-  const randomIndex = Math.floor(Math.random() * IT_FACTS.length);
-  itFact.textContent = IT_FACTS[randomIndex];
-  itFact.classList.add("show");
-  // Hide IP when showing fact
-  ipContainer.style.display = "none";
-}
-
-// Hide IT fact
-function hideFact() {
-  itFact.classList.remove("show");
-  // Show IP again if available
-  if (currentServer && currentServer.publicIp) {
-    ipContainer.style.display = "block";
-  }
-}
-
-// Reset button to default state
-function resetButton() {
-  ignitionButton.disabled = true;
-  ignitionButton.classList.remove("state-off", "state-on", "state-working");
-  statusText.textContent = "No server selected";
-  statusText.classList.remove(
-    "status-running",
-    "status-stopped",
-    "status-working"
-  );
-  hideElasticIp();
-}
-
-// Update Elastic IP display
-function updateElasticIpDisplay(publicIp) {
-  if (publicIp) {
-    ipText.textContent = publicIp;
-    ipContainer.style.display = "block";
-  } else {
-    hideElasticIp();
-  }
-}
-
-// Hide Elastic IP display
-function hideElasticIp() {
-  ipContainer.style.display = "none";
-  ipText.textContent = "-";
-}
-
-// Show/hide loading overlay
-function showLoading(show) {
-  if (show) {
-    loadingOverlay.classList.add("show");
-  } else {
-    loadingOverlay.classList.remove("show");
-  }
-}
-
-// Show error message
-function showError(message) {
-  errorDisplay.textContent = message;
-  errorDisplay.classList.add("show");
-
-  setTimeout(() => {
-    hideError();
-  }, 5000);
-}
-
-// Hide error message
-function hideError() {
-  errorDisplay.classList.remove("show");
-}
 
 // Close button handler
 closeButton.addEventListener("click", () => {
+  console.log('[Main Renderer] Close button clicked');
   // Warn if there are active security groups
   if (serverSecurityGroups.size > 0) {
     const shouldClose = confirm(
@@ -822,7 +878,8 @@ closeButton.addEventListener("click", () => {
     if (!shouldClose) return;
   }
   
-  window.close();
+  console.log('[Main Renderer] Calling closeWindow...');
+  window.electronAPI.closeWindow();
 });
 
 // Auto-refresh server status every 30 seconds if a server is selected
@@ -888,7 +945,41 @@ logoutButton.addEventListener('click', async (e) => {
     await window.electronAPI.logout();
   }
 });
+} // End setupEventListeners function
 
-// Initialize on load
-init();
+// Initialize DOM elements and start application
+console.log('[Main Renderer] Script loaded, waiting for DOM...');
+
+document.addEventListener('DOMContentLoaded', () => {
+  console.log('[Main Renderer] DOM Content Loaded event fired');
+  
+  serverSelect = document.getElementById("serverSelect") as HTMLSelectElement;
+  ignitionButton = document.getElementById("ignitionButton") as HTMLButtonElement;
+  buttonIcon = document.getElementById("buttonIcon") as HTMLElement;
+  statusText = document.getElementById("statusText") as HTMLElement;
+  itFact = document.getElementById("itFact") as HTMLDivElement;
+  errorDisplay = document.getElementById("errorDisplay") as HTMLDivElement;
+  loadingOverlay = document.getElementById("loadingOverlay") as HTMLDivElement;
+  logoutButton = document.getElementById("logoutButton") as HTMLButtonElement;
+  closeButton = document.getElementById("closeButton") as HTMLButtonElement;
+  ipContainer = document.getElementById("ipContainer") as HTMLDivElement;
+  ipText = document.getElementById("ipText") as HTMLElement;
+  copyIpButton = document.getElementById("copyIpButton") as HTMLButtonElement;
+  autoIpToggle = document.getElementById("autoIpToggle") as HTMLInputElement;
+  
+  console.log('[Main Renderer] DOM elements initialized:', {
+    serverSelect: !!serverSelect,
+    ignitionButton: !!ignitionButton,
+    closeButton: !!closeButton,
+    logoutButton: !!logoutButton
+  });
+  
+  // Set up all event listeners
+  setupEventListeners();
+  
+  // Initialize on load
+  console.log('[Main Renderer] Calling init()...');
+  init();
+});
+
 

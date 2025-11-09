@@ -20,11 +20,6 @@ interface Credentials {
   sk: string;
 }
 
-interface LoginParams {
-  accessKeyId: string;
-  secretAccessKey: string;
-}
-
 interface ServerParams {
   serverId: string;
   region: string;
@@ -101,6 +96,9 @@ function createWindow(): void {
   mainWindow.once('ready-to-show', () => {
     if (mainWindow) {
       mainWindow.show();
+      // Open DevTools for debugging
+      mainWindow.webContents.openDevTools();
+      logger.info('DevTools opened for debugging');
     }
   });
 
@@ -130,17 +128,43 @@ app.on('activate', () => {
   }
 });
 
+// Window control handlers
+ipcMain.handle('window:close', () => {
+  logger.info('Window close requested');
+  if (mainWindow) {
+    mainWindow.close();
+  }
+});
+
+ipcMain.handle('window:minimize', () => {
+  logger.info('Window minimize requested');
+  if (mainWindow) {
+    mainWindow.minimize();
+  }
+});
+
+ipcMain.handle('window:maximize', () => {
+  logger.info('Window maximize requested');
+  if (mainWindow) {
+    if (mainWindow.isMaximized()) {
+      mainWindow.unmaximize();
+    } else {
+      mainWindow.maximize();
+    }
+  }
+});
+
 // IPC Handlers
-ipcMain.handle('login', async (_event: IpcMainInvokeEvent, { accessKeyId, secretAccessKey }: LoginParams) => {
+ipcMain.handle('login', async (_event: IpcMainInvokeEvent, { ak, sk }: Credentials) => {
   try {
     logger.info('Login attempt...');
-    const isValid = await validateCredentials(accessKeyId, secretAccessKey);
+    const isValid = await validateCredentials(ak, sk);
     
     if (isValid) {
       logger.info('Login successful');
       store.set('credentials', {
-        ak: accessKeyId,
-        sk: secretAccessKey
+        ak,
+        sk
       });
       
       // Navigate to main view
