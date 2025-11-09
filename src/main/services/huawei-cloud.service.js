@@ -32,6 +32,9 @@ const {
   ListSecurityGroupRulesRequest,
 } = require("@huaweicloud/huaweicloud-sdk-vpc");
 
+const logger = require('./logger.service');
+const config = require('../../shared/config');
+
 const SA_LIMA = new Region("sa-peru-1", "https://ecs.sa-peru-1.myhuaweicloud.com");
 
 // Available ECS regions - filter out undefined ones

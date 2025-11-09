@@ -1,6 +1,8 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const Store = require('electron-store');
+const logger = require('./services/logger.service');
+const config = require('../shared/config');
 const { 
   validateCredentials, 
   listAllServers, 
@@ -13,18 +15,20 @@ const {
 } = require('./services/huawei-cloud.service');
 
 const store = new Store({
-  encryptionKey: 'huawei-ecs-manager-secure-key-2025'
+  encryptionKey: config.app.encryptionKey
 });
 
 let mainWindow;
 
 function createWindow() {
+  logger.info('Creating application window...');
+  
   mainWindow = new BrowserWindow({
-    width: 420,
-    height: 460,
-    minWidth: 380,
-    minHeight: 420,
-    resizable: false,
+    width: config.window.width,
+    height: config.window.height,
+    minWidth: config.window.minWidth,
+    minHeight: config.window.minHeight,
+    resizable: config.window.resizable,
     frame: false,
     autoHideMenuBar: true,
     webPreferences: {
@@ -95,9 +99,11 @@ app.on('activate', () => {
 // IPC Handlers
 ipcMain.handle('login', async (event, { accessKeyId, secretAccessKey }) => {
   try {
+    logger.info('Login attempt...');
     const isValid = await validateCredentials(accessKeyId, secretAccessKey);
     
     if (isValid) {
+      logger.info('Login successful');
       store.set('credentials', {
         ak: accessKeyId,
         sk: secretAccessKey
@@ -108,10 +114,11 @@ ipcMain.handle('login', async (event, { accessKeyId, secretAccessKey }) => {
       
       return { success: true };
     } else {
+      logger.warn('Login failed: Invalid credentials');
       return { success: false, error: 'Invalid credentials. Please check and try again.' };
     }
   } catch (error) {
-    console.error('Login error:', error);
+    logger.error('Login error:', error);
     return { success: false, error: 'Authentication failed. Please verify your keys.' };
   }
 });
