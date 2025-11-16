@@ -42,6 +42,7 @@
   "build": {
     "appId": "com.huawei.ecs-manager",
     "productName": "ECS Switch",
+    "executableName": "ecspwr",
     "directories": {
       "output": "out"
     },
