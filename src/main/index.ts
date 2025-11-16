@@ -1,18 +1,20 @@
+// Enable V8 compile cache for faster startup
+require('v8-compile-cache');
+
 import { app, BrowserWindow, ipcMain, IpcMainInvokeEvent } from 'electron';
 import * as path from 'path';
 import Store from 'electron-store';
 import logger from './services/logger.service';
 import config from '../shared/config';
-import { 
-  validateCredentials, 
-  listAllServers, 
-  getServerStatus, 
-  startServer, 
-  stopServer,
-  getPublicIp,
-  createTempSecurityGroup,
-  removeTempSecurityGroup
-} from './services/huawei-cloud.service';
+
+// Lazy load Huawei Cloud SDK (only when needed)
+let huaweiCloudService: any = null;
+function getHuaweiService() {
+  if (!huaweiCloudService) {
+    huaweiCloudService = require('./services/huawei-cloud.service');
+  }
+  return huaweiCloudService;
+}
 
 // Type definitions
 interface Credentials {
@@ -60,7 +62,7 @@ function createWindow(): void {
       preload: path.join(__dirname, 'preload.js')
     },
     backgroundColor: '#0a0a0a',
-    show: false
+    show: false // Will be shown in ready-to-show event
   });
 
   // Remove menu bar completely
@@ -70,24 +72,23 @@ function createWindow(): void {
   const credentials = store.get('credentials');
   
   if (credentials && credentials.ak && credentials.sk) {
-    // Validate credentials and load main view
-    validateCredentials(credentials.ak, credentials.sk)
+    // Load main view immediately - don't wait for validation
+    mainWindow.loadFile('src/renderer/views/main.html');
+    
+    // Validate credentials in background (async, non-blocking)
+    const service = getHuaweiService();
+    service.validateCredentials(credentials.ak, credentials.sk)
       .then((isValid: boolean) => {
-        if (isValid && mainWindow) {
-          mainWindow.loadFile('src/renderer/views/main.html');
-        } else {
-          // Invalid stored credentials, clear and show login
+        if (!isValid && mainWindow) {
+          // Invalid credentials - redirect to login
+          logger.warn('Stored credentials are invalid, redirecting to login');
           store.delete('credentials');
-          if (mainWindow) {
-            mainWindow.loadFile('src/renderer/views/login.html');
-          }
-        }
-      })
-      .catch(() => {
-        store.delete('credentials');
-        if (mainWindow) {
           mainWindow.loadFile('src/renderer/views/login.html');
         }
+      })
+      .catch((error) => {
+        logger.error('Credential validation failed:', error);
+        // Keep using stored credentials even if validation fails (might be network issue)
       });
   } else {
     mainWindow.loadFile('src/renderer/views/login.html');
@@ -96,9 +97,6 @@ function createWindow(): void {
   mainWindow.once('ready-to-show', () => {
     if (mainWindow) {
       mainWindow.show();
-      // Open DevTools for debugging
-      mainWindow.webContents.openDevTools();
-      logger.info('DevTools opened for debugging');
     }
   });
 
@@ -158,7 +156,8 @@ ipcMain.handle('window:maximize', () => {
 ipcMain.handle('login', async (_event: IpcMainInvokeEvent, { ak, sk }: Credentials) => {
   try {
     logger.info('Login attempt...');
-    const isValid = await validateCredentials(ak, sk);
+    const service = getHuaweiService();
+    const isValid = await service.validateCredentials(ak, sk);
     
     if (isValid) {
       logger.info('Login successful');
@@ -190,7 +189,8 @@ ipcMain.handle('get-servers', async (): Promise<ApiResponse> => {
       throw new Error('No credentials found');
     }
     
-    const servers = await listAllServers(credentials.ak, credentials.sk);
+    const service = getHuaweiService();
+    const servers = await service.listAllServers(credentials.ak, credentials.sk);
     return { success: true, servers };
   } catch (error: any) {
     console.error('Get servers error:', error);
@@ -205,7 +205,8 @@ ipcMain.handle('get-server-status', async (_event: IpcMainInvokeEvent, { serverI
       throw new Error('No credentials found');
     }
     
-    const status = await getServerStatus(credentials.ak, credentials.sk, serverId, region);
+    const service = getHuaweiService();
+    const status = await service.getServerStatus(credentials.ak, credentials.sk, serverId, region);
     return { success: true, status };
   } catch (error: any) {
     console.error('Get server status error:', error);
@@ -220,7 +221,8 @@ ipcMain.handle('start-server', async (_event: IpcMainInvokeEvent, { serverId, re
       throw new Error('No credentials found');
     }
     
-    await startServer(credentials.ak, credentials.sk, serverId, region);
+    const service = getHuaweiService();
+    await service.startServer(credentials.ak, credentials.sk, serverId, region);
     return { success: true };
   } catch (error: any) {
     console.error('Start server error:', error);
@@ -235,7 +237,8 @@ ipcMain.handle('stop-server', async (_event: IpcMainInvokeEvent, { serverId, reg
       throw new Error('No credentials found');
     }
     
-    await stopServer(credentials.ak, credentials.sk, serverId, region);
+    const service = getHuaweiService();
+    await service.stopServer(credentials.ak, credentials.sk, serverId, region);
     return { success: true };
   } catch (error: any) {
     console.error('Stop server error:', error);
@@ -245,7 +248,8 @@ ipcMain.handle('stop-server', async (_event: IpcMainInvokeEvent, { serverId, reg
 
 ipcMain.handle('get-public-ip', async (): Promise<ApiResponse> => {
   try {
-    const ip = await getPublicIp();
+    const service = getHuaweiService();
+    const ip = await service.getPublicIp();
     return { success: true, ip };
   } catch (error: any) {
     console.error('Get public IP error:', error);
@@ -264,7 +268,8 @@ ipcMain.handle('create-temp-security-group', async (_event: IpcMainInvokeEvent, 
       throw new Error('User IP is required');
     }
     
-    const result = await createTempSecurityGroup(credentials.ak, credentials.sk, serverId, region, userIp);
+    const service = getHuaweiService();
+    const result = await service.createTempSecurityGroup(credentials.ak, credentials.sk, serverId, region, userIp);
     return { success: true, sgId: result.sgId, sgName: result.sgName };
   } catch (error: any) {
     console.error('Create temp security group error:', error);
@@ -283,7 +288,8 @@ ipcMain.handle('remove-temp-security-group', async (_event: IpcMainInvokeEvent, 
       throw new Error('Security group ID and name are required');
     }
     
-    await removeTempSecurityGroup(credentials.ak, credentials.sk, serverId, region, sgId, sgName);
+    const service = getHuaweiService();
+    await service.removeTempSecurityGroup(credentials.ak, credentials.sk, serverId, region, sgId, sgName);
     return { success: true };
   } catch (error: any) {
     console.error('Remove temp security group error:', error);

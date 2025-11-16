@@ -30,10 +30,10 @@ import {
   DeleteSecurityGroupRequest
 } from "@huaweicloud/huaweicloud-sdk-vpc";
 import * as https from 'https';
+import config from '../../shared/config';
 
-// Unused logger and config for now - will replace console.log later
+// Unused logger for now - will replace console.log later
 // import logger from './logger.service';
-// import config from '../../shared/config';
 
 // Type definitions
 export interface Server {
@@ -50,11 +50,11 @@ export interface SecurityGroupInfo {
   sgName: string;
 }
 
-// Custom Lima region
+// Custom Lima region (Peru) - not in official SDK
 const SA_LIMA = new Region("sa-peru-1", "https://ecs.sa-peru-1.myhuaweicloud.com");
 
 // Available ECS regions - filter out undefined ones
-const REGIONS: Region[] = [
+const ALL_REGIONS: (Region | undefined)[] = [
   EcsRegion.AF_NORTH_1, // AF-Cairo
   EcsRegion.AF_SOUTH_1, // AF-Johannesburg
   EcsRegion.AP_SOUTHEAST_1, // CN-Hong Kong
@@ -74,6 +74,22 @@ const REGIONS: Region[] = [
   EcsRegion.SA_BRAZIL_1, // LA-Sao Paulo1
   EcsRegion.TR_WEST_1, // TR-Istanbul
 ];
+
+// Filter out any undefined regions
+const REGIONS: Region[] = ALL_REGIONS.filter((r): r is Region => r !== undefined && r !== null);
+
+console.log(`[INIT] Loaded ${REGIONS.length} regions:`, REGIONS.map(r => r.id));
+
+// Get regions to check based on configuration
+function getRegionsToCheck(): Region[] {
+  if (config.regions.preferredRegions && config.regions.preferredRegions.length > 0) {
+    const preferred = REGIONS.filter(r => config.regions.preferredRegions!.includes(r.id));
+    console.log(`[INIT] Using ${preferred.length} preferred regions for faster startup:`, preferred.map(r => r.id));
+    return preferred;
+  }
+  console.log(`[INIT] Checking all ${REGIONS.length} regions (slower startup)`);
+  return REGIONS;
+}
 
 // Timeout wrapper function
 function withTimeout<T>(promise: Promise<T>, timeoutMs: number, operation: string): Promise<T> {
@@ -152,10 +168,14 @@ export async function validateCredentials(ak: string, sk: string): Promise<boole
 
 export async function listAllServers(ak: string, sk: string): Promise<Server[]> {
   console.log("[API] Starting to list servers from all regions...");
+  
+  const regionsToCheck = getRegionsToCheck();
+  console.log(`[API] Total regions to check: ${regionsToCheck.length}`);
+  console.log(`[API] Regions: ${regionsToCheck.map(r => r.id).join(', ')}`);
   const startTime = Date.now();
 
   // Query all regions in parallel for speed
-  const regionPromises = REGIONS.map(async (region): Promise<Server[]> => {
+  const regionPromises = regionsToCheck.map(async (region): Promise<Server[]> => {
     try {
       // Skip if region is undefined
       if (!region || !region.id) {
@@ -171,7 +191,7 @@ export async function listAllServers(ak: string, sk: string): Promise<Server[]> 
 
       const response = await withTimeout(
         client.listServersDetails(request),
-        10000,
+        8000, // Reduced timeout to 8 seconds (from 30)
         `List servers in ${region.id}`
       );
       const regionDuration = Date.now() - regionStartTime;
@@ -217,6 +237,7 @@ export async function listAllServers(ak: string, sk: string): Promise<Server[]> 
       }
     } catch (error: any) {
       const regionName = region?.id || "unknown";
+      console.error(`[API] ⊘ Error in region ${regionName}:`, error);
       console.log(`[API] ⊘ Skipping region ${regionName}: ${error.message}`);
       return [];
     }
@@ -228,7 +249,7 @@ export async function listAllServers(ak: string, sk: string): Promise<Server[]> 
 
   const totalDuration = Date.now() - startTime;
   const successCount = results.filter((r) => r.length > 0).length;
-  const skipCount = REGIONS.length - results.filter((r) => r !== null).length;
+  const skipCount = regionsToCheck.length - results.filter((r) => r !== null).length;
 
   console.log(
     `[API] ✓ Listing complete: ${servers.length} total servers from ${successCount} regions (${skipCount} skipped) in ${totalDuration}ms`

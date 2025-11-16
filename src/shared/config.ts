@@ -35,6 +35,12 @@ export interface SecurityGroupConfig {
   disassociationWait: number;
 }
 
+export interface RegionConfig {
+  // Only check these regions for faster startup. Set to null to check all regions.
+  // Example: ['sa-peru-1', 'la-south-2'] to only check Lima and Santiago
+  preferredRegions: string[] | null;
+}
+
 export interface Config {
   app: AppConfig;
   window: WindowConfig;
@@ -42,6 +48,7 @@ export interface Config {
   intervals: IntervalConfig;
   operationStateExpiry: number;
   securityGroup: SecurityGroupConfig;
+  regions: RegionConfig;
   isDevelopment: boolean;
 }
 
@@ -86,7 +93,15 @@ const config: Config = {
     disassociationWait: 5000 // 5 seconds wait after disassociation
   },
 
-  // Development settings
+  // Region settings for optimization
+  regions: {
+    // Only check these specific regions for faster startup
+    // Set to null to check all 18 regions (slower but comprehensive)
+    // Example: ['sa-peru-1', 'la-south-2'] for Lima and Santiago only
+    preferredRegions: ['sa-peru-1', 'la-south-2'] // Only check Lima and Santiago
+  },
+
+  // Development mode flag
   isDevelopment: process.env.NODE_ENV === 'development'
 };
 

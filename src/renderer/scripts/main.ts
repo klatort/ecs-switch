@@ -202,7 +202,7 @@ let closeButton: HTMLButtonElement;
 let ipContainer: HTMLDivElement;
 let ipText: HTMLElement;
 let copyIpButton: HTMLButtonElement;
-let autoIpToggle: HTMLInputElement;
+let ipAccessButton: HTMLButtonElement;
 
 // Utility Functions (defined before use)
 
@@ -291,11 +291,6 @@ async function init(): Promise<void> {
   console.log('[Main Renderer] init() started');
   showLoading(true);
 
-  // Load saved auto-IP preference
-  const autoIpEnabled = localStorage.getItem("autoIpEnabled") === "true";
-  autoIpToggle.checked = autoIpEnabled;
-  console.log('[Main Renderer] Auto-IP enabled:', autoIpEnabled);
-
   // Load persisted security groups
   loadSecurityGroups();
   
@@ -304,8 +299,8 @@ async function init(): Promise<void> {
 
   await loadServers();
   
-  // Clean up orphaned security groups (servers that are stopped)
-  if (autoIpEnabled && serverSecurityGroups.size > 0) {
+  // Clean up orphaned security groups (servers that are not running)
+  if (serverSecurityGroups.size > 0) {
     cleanupOrphanedSecurityGroups();
   }
   
@@ -446,13 +441,14 @@ document.addEventListener('DOMContentLoaded', () => {
   ipContainer = document.getElementById("ipContainer") as HTMLDivElement;
   ipText = document.getElementById("ipText") as HTMLElement;
   copyIpButton = document.getElementById("copyIpButton") as HTMLButtonElement;
-  autoIpToggle = document.getElementById("autoIpToggle") as HTMLInputElement;
+  ipAccessButton = document.getElementById("ipAccessButton") as HTMLButtonElement;
   
   console.log('[Main Renderer] DOM elements initialized:', {
     serverSelect: !!serverSelect,
     ignitionButton: !!ignitionButton,
     closeButton: !!closeButton,
-    logoutButton: !!logoutButton
+    logoutButton: !!logoutButton,
+    ipAccessButton: !!ipAccessButton
   });
   
   // Set up all event listeners
@@ -465,9 +461,75 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Set up all event listeners (called after DOM is ready)
 function setupEventListeners(): void {
-  // Save auto-IP toggle state
-  autoIpToggle.addEventListener("change", () => {
-    localStorage.setItem("autoIpEnabled", String(autoIpToggle.checked));
+  // IP Access button handler - toggle security group for current server
+  ipAccessButton.addEventListener("click", async () => {
+    if (!currentServer || isOperating) return;
+    
+    console.log('[UI] IP Access button clicked');
+    const isActive = serverSecurityGroups.has(currentServer.id);
+    
+    ipAccessButton.classList.add('working');
+    ipAccessButton.disabled = true;
+    
+    try {
+      if (isActive) {
+        // Remove security group
+        const sgInfo = serverSecurityGroups.get(currentServer.id);
+        if (sgInfo) {
+          console.log(`[UI] Removing security group for ${currentServer.name}...`);
+          const result = await window.electronAPI.removeTempSecurityGroup({
+            serverId: currentServer.id,
+            region: currentServer.region,
+            sgId: sgInfo.sgId,
+            sgName: sgInfo.sgName,
+          });
+          
+          if (result.success) {
+            serverSecurityGroups.delete(currentServer.id);
+            saveSecurityGroups();
+            ipAccessButton.classList.remove('active');
+            console.log(`[UI] ✓ Security group removed`);
+          } else {
+            showError(`Failed to remove IP access: ${result.error}`);
+            console.error(`[UI] ✗ Failed to remove security group:`, result.error);
+          }
+        }
+      } else {
+        // Add security group
+        console.log(`[UI] Adding security group for ${currentServer.name}...`);
+        const ipResult = await window.electronAPI.getPublicIp();
+        
+        if (ipResult.success && ipResult.ip) {
+          const result = await window.electronAPI.createTempSecurityGroup({
+            serverId: currentServer.id,
+            region: currentServer.region,
+            userIp: ipResult.ip,
+          });
+          
+          if (result.success && result.sgId && result.sgName) {
+            serverSecurityGroups.set(currentServer.id, {
+              sgId: result.sgId,
+              sgName: result.sgName
+            });
+            saveSecurityGroups();
+            ipAccessButton.classList.add('active');
+            console.log(`[UI] ✓ Security group created: ${result.sgId}`);
+          } else {
+            showError(`Failed to add IP access: ${result.error}`);
+            console.error(`[UI] ✗ Failed to create security group:`, result.error);
+          }
+        } else {
+          showError(`Failed to get your public IP: ${ipResult.error}`);
+          console.error(`[UI] ✗ Failed to get public IP:`, ipResult.error);
+        }
+      }
+    } catch (error) {
+      console.error('[UI] Error toggling IP access:', error);
+      showError('An error occurred while changing IP access');
+    } finally {
+      ipAccessButton.classList.remove('working');
+      ipAccessButton.disabled = false;
+    }
   });
   
   // Server selection handler
@@ -478,6 +540,8 @@ function setupEventListeners(): void {
       currentServer = null;
       isOperating = false;
       clearInterval(factInterval);
+      ipAccessButton.disabled = true;
+      ipAccessButton.classList.remove('active');
       hideFact();
       resetButton();
       hideElasticIp();
@@ -582,7 +646,7 @@ async function updateServerStatus() {
 }
 
 // Update button state based on server status
-function updateButtonState(status) {
+function updateButtonState(status: string): void {
   ignitionButton.disabled = false;
   ignitionButton.classList.remove("state-off", "state-on", "state-working");
   statusText.classList.remove(
@@ -598,6 +662,16 @@ function updateButtonState(status) {
     statusText.textContent = "Running";
     statusText.classList.add("status-running");
     
+    // Enable IP Access button when server is running
+    ipAccessButton.disabled = false;
+    
+    // Update IP Access button state based on security group
+    if (currentServer && serverSecurityGroups.has(currentServer.id)) {
+      ipAccessButton.classList.add('active');
+    } else {
+      ipAccessButton.classList.remove('active');
+    }
+    
     // Show IP when running and not operating
     if (currentServer && currentServer.publicIp && !serverOperations.has(currentServer.id)) {
       updateElasticIpDisplay(currentServer.publicIp);
@@ -606,6 +680,10 @@ function updateButtonState(status) {
     ignitionButton.classList.add("state-off");
     statusText.textContent = "Stopped";
     statusText.classList.add("status-stopped");
+    
+    // Disable IP Access button when server is stopped
+    ipAccessButton.disabled = true;
+    ipAccessButton.classList.remove('active');
     
     // Show IP when stopped and not operating
     if (currentServer && currentServer.publicIp && !serverOperations.has(currentServer.id)) {
@@ -617,6 +695,9 @@ function updateButtonState(status) {
     statusText.textContent =
       status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
     statusText.classList.add("status-working");
+    
+    // Disable IP Access button during transition
+    ipAccessButton.disabled = true;
 
     // Poll for status update
     setTimeout(() => updateServerStatus(), 3000);
@@ -704,73 +785,6 @@ async function performServerOperation(operation) {
   factInterval = setInterval(showRandomFact, 8000); // Change fact every 8 seconds
 
   try {
-    // If auto-IP is enabled and starting, create security group first
-    if (operation === "start" && autoIpToggle.checked) {
-      console.log(`[UI] Auto-IP enabled, creating security group...`);
-      statusText.textContent = "Setting up security...";
-      const ipResult = await window.electronAPI.getPublicIp();
-
-      if (ipResult.success) {
-        console.log(`[UI] Public IP retrieved: ${ipResult.ip}`);
-        const sgResult = await window.electronAPI.createTempSecurityGroup({
-          serverId: operatingServerId,
-          region: operatingServerRegion,
-          userIp: ipResult.ip,
-        });
-
-        if (sgResult.success) {
-          // Store security group info per server
-          serverSecurityGroups.set(operatingServerId, {
-            sgId: sgResult.sgId,
-            sgName: sgResult.sgName
-          });
-          saveSecurityGroups(); // Persist to localStorage
-          console.log(
-            `[UI] Temporary security group created: ${sgResult.sgId} (${sgResult.sgName})`
-          );
-        } else {
-          console.error(`[UI] Failed to create security group:`, sgResult.error);
-        }
-      } else {
-        console.error(`[UI] Failed to get public IP:`, ipResult.error);
-      }
-      statusText.textContent = "Starting...";
-    }
-
-    if (operation === "stop" && autoIpToggle.checked) {
-      // Get the security group for this specific server
-      const sgInfo = serverSecurityGroups.get(operatingServerId);
-      
-      if (sgInfo) {
-        console.log(`[UI] Auto-IP enabled, removing security group...`);
-        statusText.textContent = "Cleaning up security...";
-        console.log(
-          `[UI] Removing temporary security group: ${sgInfo.sgId} (${sgInfo.sgName})`
-        );
-        const sgResult = await window.electronAPI.removeTempSecurityGroup({
-          serverId: operatingServerId,
-          region: operatingServerRegion,
-          sgId: sgInfo.sgId,
-          sgName: sgInfo.sgName,
-        });
-
-        if (sgResult.success) {
-          // Remove from the map
-          serverSecurityGroups.delete(operatingServerId);
-          saveSecurityGroups(); // Persist to localStorage
-          console.log(
-            `[UI] Temporary security group removed: ${sgInfo.sgId} (${sgInfo.sgName})`
-          );
-        } else {
-          console.error(`[UI] Failed to remove security group:`, sgResult.error);
-          // Don't remove from map if removal failed - keep for retry
-        }
-      } else {
-        console.log(`[UI] No security group found for this server`);
-      }
-      statusText.textContent = "Stopping...";
-    }
-
     console.log(`[UI] Calling ${operation} API...`);
     const apiCall =
       operation === "start"
@@ -965,13 +979,14 @@ document.addEventListener('DOMContentLoaded', () => {
   ipContainer = document.getElementById("ipContainer") as HTMLDivElement;
   ipText = document.getElementById("ipText") as HTMLElement;
   copyIpButton = document.getElementById("copyIpButton") as HTMLButtonElement;
-  autoIpToggle = document.getElementById("autoIpToggle") as HTMLInputElement;
+  ipAccessButton = document.getElementById("ipAccessButton") as HTMLButtonElement;
   
   console.log('[Main Renderer] DOM elements initialized:', {
     serverSelect: !!serverSelect,
     ignitionButton: !!ignitionButton,
     closeButton: !!closeButton,
-    logoutButton: !!logoutButton
+    logoutButton: !!logoutButton,
+    ipAccessButton: !!ipAccessButton
   });
   
   // Set up all event listeners

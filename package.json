@@ -1,6 +1,6 @@
 {
   "name": "huawei-cloud-ecs-manager",
-  "version": "1.0.2b",
+  "version": "1.0.3",
   "description": "Desktop application to manage Huawei Cloud ECS instances",
   "main": "dist/main/index.js",
   "scripts": {
@@ -36,7 +36,8 @@
     "@huaweicloud/huaweicloud-sdk-iam": "^3.1.0",
     "@huaweicloud/huaweicloud-sdk-vpc": "^3.1.173",
     "electron-store": "^8.1.0",
-    "uuid": "^8.3.2"
+    "uuid": "^8.3.2",
+    "v8-compile-cache": "^2.4.0"
   },
   "build": {
     "appId": "com.huawei.ecs-manager",
@@ -50,11 +51,22 @@
       "node_modules/**/*",
       "package.json"
     ],
+    "asarUnpack": [
+      "node_modules/@huaweicloud/**/*"
+    ],
+    "asar": true,
+    "compression": "normal",
     "win": {
       "target": [
-        "portable"
+        {
+          "target": "dir",
+          "arch": [
+            "x64"
+          ]
+        }
       ],
-      "icon": "build/icon.ico"
+      "icon": "build/icon.ico",
+      "requestedExecutionLevel": "asInvoker"
     },
     "mac": {
       "target": "dmg",

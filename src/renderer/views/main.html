@@ -15,16 +15,20 @@
     
     <!-- Main Content -->
     <div class="main-content">
-      <!-- Header Row: Auto-IP Toggle + Server Selection + Logout -->
+      <!-- Header Row: IP Access Button + Server Selection + Logout -->
       <div class="header-row">
-        <div class="toggle-container">
-          <input type="checkbox" id="autoIpToggle" class="toggle-checkbox">
-          <label for="autoIpToggle" class="toggle-label" title="Automatically add/remove your IP to security group">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <div class="ip-access-container">
+          <button id="ipAccessButton" class="btn-ip-access" disabled title="Allow my IP access to this server">
+            <svg class="icon-locked" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
               <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
             </svg>
-          </label>
+            <svg class="icon-unlocked" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+              <path d="M7 11V7a5 5 0 0 1 9.9 0v4"></path>
+            </svg>
+            <span class="ip-access-text">IP Access</span>
+          </button>
         </div>
         
         <div class="select-wrapper">
