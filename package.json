@@ -20,7 +20,10 @@
     "ecs",
     "electron"
   ],
-  "author": "Fabrizio Mayor klatort@gmail.com",
+  "author": { 
+    "name": "Fabrizio Mayor", 
+    "email": "klatort@gmail.com"
+  },
   "license": "MIT",
   "devDependencies": {
     "@types/electron": "^1.4.38",
