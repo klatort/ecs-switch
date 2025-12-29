@@ -75,6 +75,13 @@ jobs:
       - name: Display artifact structure
         run: ls -R artifacts
       
+      - name: Package Windows build
+        run: |
+          cd artifacts/windows-build
+          zip -r ../../ecs-switch-windows-${{ steps.package_version.outputs.version }}.zip .
+          cd ../..
+          ls -lh ecs-switch-windows-*.zip
+      
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
@@ -84,7 +91,8 @@ jobs:
           draft: false
           prerelease: false
           files: |
-            artifacts/linux-build/*
-            artifacts/windows-build/**/*
+            artifacts/linux-build/*.AppImage
+            artifacts/linux-build/*.deb
+            ecs-switch-windows-${{ steps.package_version.outputs.version }}.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
