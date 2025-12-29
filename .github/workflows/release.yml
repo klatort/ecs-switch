@@ -12,7 +12,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [ubuntu-latest, windows-latest]
     
     steps:
       - name: Checkout code
@@ -46,14 +46,6 @@ jobs:
         with:
           name: windows-build
           path: out/**/*
-          if-no-files-found: error
-      
-      - name: Upload macOS artifacts
-        if: matrix.os == 'macos-latest'
-        uses: actions/upload-artifact@v4
-        with:
-          name: macos-build
-          path: out/*.dmg
           if-no-files-found: error
 
   release:
@@ -91,6 +83,5 @@ jobs:
           files: |
             artifacts/linux-build/*
             artifacts/windows-build/**/*
-            artifacts/macos-build/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
